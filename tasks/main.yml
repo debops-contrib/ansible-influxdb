@@ -1,0 +1,69 @@
+---
+
+- name: Get existing users
+  uri:
+    url: '{{ influxdb_query_url }}?q=SHOW%20USERS'
+    force_basic_auth: True
+    password: '{{ influxdb_admin_password }}'
+    user: '{{ influxdb_admin }}'
+  register: influxdb_register_user_list_raw
+  delegate_to: '{{ influxdb_delegate_to }}'
+  changed_when: False
+
+- name: Process user list
+  set_fact:
+    influxdb_register_user_list: "{{ influxdb_register_user_list_raw['json']['results'][0]['series'][0]['values']|map(attribute=0)|list }}"
+
+- name: Get existing databases
+  uri:
+    url: '{{ influxdb_query_url }}?q=SHOW%20DATABASES'
+    force_basic_auth: True
+    password: '{{ influxdb_admin_password }}'
+    user: '{{ influxdb_admin }}'
+  register: influxdb_register_database_list_raw
+  delegate_to: '{{ influxdb_delegate_to }}'
+  changed_when: False
+
+- name: Process database list
+  set_fact:
+    influxdb_register_database_list: "{{ influxdb_register_database_list_raw['json']['results'][0]['series'][0]['values']|map(attribute=0)|list }}"
+#- name: Get existing users
+#  shell: /opt/influxdb/influx -execute 'show databases' | tail -n '+4' | grep -v '^$'
+#  register: influxdb_register_database_list
+#  changed_when: False
+
+- name: influxdb_register_user_list
+  debug:
+    msg: '{{ influxdb_register_user_list }}'
+
+- name: influxdb_register_database_list
+  debug:
+    msg: "{{ influxdb_register_database_list }}"
+
+- name: influxdb_users
+  debug:
+    msg: '{{ influxdb_users }}'
+
+- name: Create users
+  uri:
+    url: "{{ influxdb_query_url + '?q=' + ('CREATE USER ' + item.user + \" WITH PASSWORD '\" + (item.password | default(lookup('password', secret + '/credentials/' + influxdb_delegate_to + '/influxdb/' + item.user + '/password length=20'))) + \"'\")|urlencode }}"
+    force_basic_auth: True
+    password: '{{ influxdb_admin_password }}'
+    user: '{{ influxdb_admin }}'
+  when: item.user not in influxdb_register_user_list
+  delegate_to: '{{ influxdb_delegate_to }}'
+  with_items: influxdb_users
+
+- name: Create databases
+  uri:
+    url: "{{ influxdb_query_url + '?q=' + ('CREATE DATABASE ' + item.database)|urlencode }}"
+    force_basic_auth: True
+    password: '{{ influxdb_admin_password }}'
+    database: '{{ influxdb_admin }}'
+  when: item.database not in influxdb_register_database_list
+  delegate_to: '{{ influxdb_delegate_to }}'
+  with_items: influxdb_databases
+#- name: Create users
+#  shell: /opt/influxdb/influx -execute 'CREATE DATABASE {{ item.database }}'
+#  when: item.database not in influxdb_register_database_list.stdout_lines
+#  with_items: influxdb_databases
