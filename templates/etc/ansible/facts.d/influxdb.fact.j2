@@ -1,0 +1,9 @@
+{% set influxdb__tpl_delegate_to = ansible_local.influxdb.delegate_to if (ansible_local|d() and ansible_local.influxdb|d() and ansible_local.influxdb.delegate_to|d()) else influxdb__delegate_to %}
+{% set influxdb__tpl_server = ansible_local.influxdb.server if (ansible_local|d() and ansible_local.influxdb|d() and ansible_local.influxdb.server|d()) else influxdb__server %}
+{% set influxdb__tpl_admin = ansible_local.influxdb.admin if (ansible_local|d() and ansible_local.influxdb|d() and ansible_local.influxdb.admin|d()) else influxdb__admin %}
+{
+"delegate_to": "{{ influxdb__tpl_delegate_to }}",
+"server": "{{ influxdb__tpl_server }}",
+"admin": "{{ influxdb__tpl_admin }}"
+}
+
