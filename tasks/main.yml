@@ -2,60 +2,60 @@
 
 - name: Get existing users
   uri:
-    url: '{{ influxdb_query_url }}?q=SHOW%20USERS'
+    url: '{{ influxdb__query_url }}?q=SHOW%20USERS'
     force_basic_auth: True
-    password: '{{ influxdb_admin_password }}'
-    user: '{{ influxdb_admin }}'
-  register: influxdb_register_user_list_raw
-  delegate_to: '{{ influxdb_delegate_to }}'
+    password: '{{ influxdb__admin_password }}'
+    user: '{{ influxdb__admin }}'
+  register: influxdb__register_user_list_raw
+  delegate_to: '{{ influxdb__delegate_to }}'
   changed_when: False
 
 - name: Process user list
   set_fact:
-    influxdb_register_user_list: "{{ influxdb_register_user_list_raw['json']['results'][0]['series'][0]['values']|map(attribute=0)|list }}"
+    influxdb__register_user_list: "{{ influxdb__register_user_list_raw['json']['results'][0]['series'][0]['values']|map(attribute=0)|list }}"
 
 - name: Get existing databases
   uri:
-    url: '{{ influxdb_query_url }}?q=SHOW%20DATABASES'
+    url: '{{ influxdb__query_url }}?q=SHOW%20DATABASES'
     force_basic_auth: True
-    password: '{{ influxdb_admin_password }}'
-    user: '{{ influxdb_admin }}'
-  register: influxdb_register_database_list_raw
-  delegate_to: '{{ influxdb_delegate_to }}'
+    password: '{{ influxdb__admin_password }}'
+    user: '{{ influxdb__admin }}'
+  register: influxdb__register_database_list_raw
+  delegate_to: '{{ influxdb__delegate_to }}'
   changed_when: False
 
 - name: Process database list
   set_fact:
-    influxdb_register_database_list: "{{ influxdb_register_database_list_raw['json']['results'][0]['series'][0]['values']|map(attribute=0)|list }}"
+    influxdb__register_database_list: "{{ influxdb__register_database_list_raw['json']['results'][0]['series'][0]['values']|map(attribute=0)|list }}"
 
-- name: influxdb_register_user_list
+- name: influxdb__register_user_list
   debug:
-    msg: '{{ influxdb_register_user_list }}'
+    msg: '{{ influxdb__register_user_list }}'
 
-- name: influxdb_register_database_list
+- name: influxdb__register_database_list
   debug:
-    msg: "{{ influxdb_register_database_list }}"
+    msg: "{{ influxdb__register_database_list }}"
 
-- name: influxdb_users
+- name: influxdb__users
   debug:
-    msg: '{{ influxdb_users }}'
+    msg: '{{ influxdb__users }}'
 
 - name: Create users
   uri:
-    url: "{{ influxdb_query_url + '?q=' + ('CREATE USER ' + item.user + \" WITH PASSWORD '\" + (item.password | default(lookup('password', secret + '/influxdb/' + influxdb_delegate_to + '/credentials/' + item.user + '/password length=20'))) + \"'\")|urlencode }}"
+    url: "{{ influxdb__query_url + '?q=' + ('CREATE USER ' + item.user + \" WITH PASSWORD '\" + (item.password | default(lookup('password', secret + '/influxdb/' + influxdb__delegate_to + '/credentials/' + item.user + '/password length=20'))) + \"'\")|urlencode }}"
     force_basic_auth: True
-    password: '{{ influxdb_admin_password }}'
-    user: '{{ influxdb_admin }}'
-  when: item.user not in influxdb_register_user_list
-  delegate_to: '{{ influxdb_delegate_to }}'
-  with_items: influxdb_users
+    password: '{{ influxdb__admin_password }}'
+    user: '{{ influxdb__admin }}'
+  when: item.user not in influxdb__register_user_list
+  delegate_to: '{{ influxdb__delegate_to }}'
+  with_items: influxdb__users
 
 - name: Create databases
   uri:
-    url: "{{ influxdb_query_url + '?q=' + ('CREATE DATABASE ' + item.database)|urlencode }}"
+    url: "{{ influxdb__query_url + '?q=' + ('CREATE DATABASE ' + item.database)|urlencode }}"
     force_basic_auth: True
-    password: '{{ influxdb_admin_password }}'
-    database: '{{ influxdb_admin }}'
-  when: item.database not in influxdb_register_database_list
-  delegate_to: '{{ influxdb_delegate_to }}'
-  with_items: influxdb_databases
+    password: '{{ influxdb__admin_password }}'
+    database: '{{ influxdb__admin }}'
+  when: item.database not in influxdb__register_database_list
+  delegate_to: '{{ influxdb__delegate_to }}'
+  with_items: influxdb__databases
