@@ -46,6 +46,7 @@
     force_basic_auth: True
     password: '{{ influxdb__admin_password }}'
     user: '{{ influxdb__admin }}'
+    method: 'POST'
   when: item.user not in influxdb__register_user_list
   delegate_to: '{{ influxdb__delegate_to }}'
   with_items: influxdb__users
@@ -59,6 +60,18 @@
   when: item.database not in influxdb__register_database_list
   delegate_to: '{{ influxdb__delegate_to }}'
   with_items: influxdb__databases
+
+
+- name: Grant permissions
+  uri:
+    url: "{{ influxdb__query_url + '?q=' + ('GRANT ' + item.premissions + ' ON ' + item.database + ' TO ' + item.user)|urlencode }}"
+    force_basic_auth: True
+    user: '{{ influxdb__admin }}'
+    password: '{{ influxdb__admin_password }}'
+    database: '{{ influxdb__admin }}'
+    method: 'POST'
+  delegate_to: '{{ influxdb__delegate_to }}'
+  with_items: influxdb__premissions
 
 - name: Make sure that Ansible local fact directory exists
   file:
@@ -81,4 +94,3 @@
   action: setup
   when: influxdb__register_local_facts|d() and
         influxdb__register_local_facts.changed
-
