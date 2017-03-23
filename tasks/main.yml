@@ -56,7 +56,7 @@
     url: "{{ influxdb__query_url + '?q=' + ('CREATE DATABASE ' + item.database)|urlencode }}"
     force_basic_auth: True
     password: '{{ influxdb__admin_password }}'
-    database: '{{ influxdb__admin }}'
+    user: '{{ influxdb__admin }}'
   when: item.database not in influxdb__register_database_list
   delegate_to: '{{ influxdb__delegate_to }}'
   with_items: influxdb__databases
