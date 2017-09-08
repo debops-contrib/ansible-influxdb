@@ -49,7 +49,7 @@
     method: 'POST'
   when: item.user not in influxdb__register_user_list
   delegate_to: '{{ influxdb__delegate_to }}'
-  with_items: influxdb__users
+  with_items: '{{ influxdb__users }}'
 
 - name: Create databases
   uri:
@@ -59,7 +59,7 @@
     user: '{{ influxdb__admin }}'
   when: item.database not in influxdb__register_database_list
   delegate_to: '{{ influxdb__delegate_to }}'
-  with_items: influxdb__databases
+  with_items: '{{ influxdb__databases }}'
 
 
 - name: Grant permissions
@@ -71,7 +71,7 @@
     database: '{{ influxdb__admin }}'
     method: 'POST'
   delegate_to: '{{ influxdb__delegate_to }}'
-  with_items: influxdb__premissions
+  with_items: '{{ influxdb__premissions }}'
 
 - name: Make sure that Ansible local fact directory exists
   file:
